@@ -1,0 +1,11 @@
+;asdfasdfsad
+
+.section.text
+	addi  x0,x0,0x0000
+	addi  x0,x0,0x0000
+	addi  x0,x0,0x0329	
+	addi  x0,x0,0x0000
+ll:
+	addi x1,x3,0x0234
+.section.data
+                 kkm :  0x9876,0x5432

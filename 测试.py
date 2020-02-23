@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtCore import (QEvent, QFile, QFileInfo, QIODevice, QRegExp,
                           QTextStream,Qt)
 from PyQt5.QtWidgets import (QAction, QApplication,  QFileDialog,
-                             QMainWindow, QMessageBox, QTextEdit)
+                             QMainWindow, QMessageBox, QTextEdit,QToolBar)
 from PyQt5.QtGui import QFont, QIcon,QColor,QKeySequence,QSyntaxHighlighter,QTextCharFormat,QTextCursor
 #import qrc_resources
 
@@ -12,16 +12,17 @@ from PyQt5.QtGui import QFont, QIcon,QColor,QKeySequence,QSyntaxHighlighter,QTex
 __version__ = "1.1.0"
 
 
-class PythonHighlighter(QSyntaxHighlighter):
+class AssemblyHighlighter(QSyntaxHighlighter):
 
     Rules = []
     Formats = {}
 
     def __init__(self, parent=None):
-        super(PythonHighlighter, self).__init__(parent)
+        super(AssemblyHighlighter, self).__init__(parent)
 
         self.initializeFormats()
-
+        KEYWORDS = ['.data','.text']
+        '''
         KEYWORDS = ["and", "as", "assert", "break", "class",
                 "continue", "def", "del", "elif", "else", "except",
                 "exec", "finally", "for", "from", "global", "if",
@@ -29,94 +30,37 @@ class PythonHighlighter(QSyntaxHighlighter):
                 "print", "raise", "return", "try", "while", "with",
                 "yield"]
         '''
-        BUILTINS = ["abs", "all", "any", "basestring", "bool",
-                "callable", "chr", "classmethod", "cmp", "compile",
-                "complex", "delattr", "dict", "dir", "divmod",
-                "enumerate", "eval", "execfile", "exit", "file",
-                "filter", "float", "frozenset", "getattr", "globals",
-                "hasattr", "hex", "id", "int", "isinstance",
-                "issubclass", "iter", "len", "list", "locals", "map",
-                "max", "min", "object", "oct", "open", "ord", "pow",
-                "property", "range", "reduce", "repr", "reversed",
-                "round", "set", "setattr", "slice", "sorted",
-                "staticmethod", "str", "sum", "super", "tuple", "type",
-                "vars", "zip"]
-            '''
-        BUILTINS = [ 'addi',
-            'lui',
-            'auipc',
-            'jal',
-            'jalr',
-            'beq',
-            'bne',
-            'blt',
-            'bge',
-            'bltu',
-            'bgeu',
-            'lb',
-            'lh',
-            'lw',
-            'lbu',
-            'lhu',
-            'sb',
-            'sh',
-            'sw',
-            'slti',
-            'sltiu',
-            'xori',
-            'ori',
-            'andi',
-            'slli',
-            'srli',
-            'srai',
-            'add',
-            'sub',
-            'sll',
-            'slt',
-            'sltu',
-            'xor',
-            'srl',
-            'sra',
-            'or',
-            'and',
+        BUILTINS =  ['addi', 'lui', 'auipc', 'jal', 'jalr', 'beq', 'bne', 'blt', 'bge', 'bltu', 'bgeu', 'lb', 'lh', 'lw', 'lbu', 'lhu', 'sb', 'sh', 'sw', 'slti', 'sltiu', 'xori', 'ori', 'andi', 'slli', 'srli', 'srai', 'add', 'sub', 'sll', 'slt', 'sltu', 'xor', 'srl', 'sra', 'or', 'and', 'fence.i', 'ecall', 'ebreak', 'cssrrw', 'csrrs', 'csrrc', 'csrrwi', 'csrrsi', 'csrrci', 'ADDI', 'LUI', 'AUIPC', 'JAL', 'JALR', 'BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU', 'LB', 'LH', 'LW', 'LBU', 'LHU', 'SB', 'SH', 'SW', 'SLTI', 'SLTIU', 'XORI', 'ORI', 'ANDI', 'SLLI', 'SRLI', 'SRAI', 'ADD', 'SUB', 'SLL', 'SLT', 'SLTU', 'XOR', 'SRL', 'SRA', 'OR', 'AND', 'FENCE.I', 'ECALL', 'EBREAK', 'CSSRRW', 'CSRRS', 'CSRRC', 'CSRRWI', 'CSRRSI', 'CSRRCI']
 
-            'fence.i',
-            'ecall',
-            'ebreak',
-            'cssrrw',
-            'csrrs',
-            'csrrc',
-            'csrrwi',
-            'csrrsi',
-            'csrrci',
-]
+
+
         CONSTANTS = ["False", "True", "None", "NotImplemented",
                      "Ellipsis"]
 
-        PythonHighlighter.Rules.append((QRegExp(
+        AssemblyHighlighter.Rules.append((QRegExp(
                 "|".join([r"\b%s\b" % keyword for keyword in KEYWORDS])),
                 "keyword"))
-        PythonHighlighter.Rules.append((QRegExp(
+        AssemblyHighlighter.Rules.append((QRegExp(
                 "|".join([r"\b%s\b" % builtin for builtin in BUILTINS])),
                 "builtin"))
-        PythonHighlighter.Rules.append((QRegExp(
+        AssemblyHighlighter.Rules.append((QRegExp(
                 "|".join([r"\b%s\b" % constant
                 for constant in CONSTANTS])), "constant"))
-        PythonHighlighter.Rules.append((QRegExp(
+        AssemblyHighlighter.Rules.append((QRegExp(
                 r"\b[+-]?[0-9]+[lL]?\b"
                 r"|\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b"
                 r"|\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b"),
                 "number"))
-        PythonHighlighter.Rules.append((QRegExp(
+        AssemblyHighlighter.Rules.append((QRegExp(
                 r"\bPyQt4\b|\bQt?[A-Z][a-z]\w+\b"), "pyqt"))
-        PythonHighlighter.Rules.append((QRegExp(r"\b@\w+\b"),
+        AssemblyHighlighter.Rules.append((QRegExp(r"\b@\w+\b"),
                 "decorator"))
         stringRe = QRegExp(r"""(?:'[^']*'|"[^"]*")""")
         stringRe.setMinimal(True)
-        PythonHighlighter.Rules.append((stringRe, "string"))
+        AssemblyHighlighter.Rules.append((stringRe, "string"))
         self.stringRe = QRegExp(r"""(:?"["]".*"["]"|'''.*''')""")
         self.stringRe.setMinimal(True)
-        PythonHighlighter.Rules.append((self.stringRe, "string"))
+        AssemblyHighlighter.Rules.append((self.stringRe, "string"))
         self.tripleSingleRe = QRegExp(r"""'''(?!")""")
         self.tripleDoubleRe = QRegExp(r'''"""(?!')''')
 
@@ -138,7 +82,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                 format.setFontWeight(QFont.Bold)
             if name == "comment":
                 format.setFontItalic(True)
-            PythonHighlighter.Formats[name] = format
+            AssemblyHighlighter.Formats[name] = format
 
 
     def highlightBlock(self, text):
@@ -148,36 +92,36 @@ class PythonHighlighter(QSyntaxHighlighter):
         prevState = self.previousBlockState()
 
         self.setFormat(0, textLength,
-                       PythonHighlighter.Formats["normal"])
+                       AssemblyHighlighter.Formats["normal"])
 
         if text.startswith("Traceback") or text.startswith("Error: "):
             self.setCurrentBlockState(ERROR)
             self.setFormat(0, textLength,
-                           PythonHighlighter.Formats["error"])
+                           AssemblyHighlighter.Formats["error"])
             return
         if (prevState == ERROR and
             not (text.startswith(sys.ps1) or text.startswith(";"))):
             self.setCurrentBlockState(ERROR)
             self.setFormat(0, textLength,
-                           PythonHighlighter.Formats["error"])
+                           AssemblyHighlighter.Formats["error"])
             return
 
-        for regex, format in PythonHighlighter.Rules:
+        for regex, format in AssemblyHighlighter.Rules:
             i = regex.indexIn(text)
             while i >= 0:
                 length = regex.matchedLength()
                 self.setFormat(i, length,
-                               PythonHighlighter.Formats[format])
+                               AssemblyHighlighter.Formats[format])
                 i = regex.indexIn(text, i + length)
 
         # Slow but good quality highlighting for comments. For more
         # speed, comment this out and add the following to __init__:
-        # PythonHighlighter.Rules.append((QRegExp(r"#.*"), "comment"))
+        # AssemblyHighlighter.Rules.append((QRegExp(r"#.*"), "comment"))
         if not text:
             pass
         elif text[0] == ';':
             self.setFormat(0, len(text),
-                           PythonHighlighter.Formats["comment"])
+                           AssemblyHighlighter.Formats["comment"])
         else:
             stack = []
             for i, c in enumerate(text):
@@ -188,7 +132,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                         stack.append(c)
                 elif c == ";" and len(stack) == 0:
                     self.setFormat(i, len(text),
-                                   PythonHighlighter.Formats["comment"])
+                                   AssemblyHighlighter.Formats["comment"])
                     break
 
         self.setCurrentBlockState(NORMAL)
@@ -205,11 +149,11 @@ class PythonHighlighter(QSyntaxHighlighter):
                     i = text.length()
                     self.setCurrentBlockState(state)
                 self.setFormat(0, i + 3,
-                               PythonHighlighter.Formats["string"])
+                               AssemblyHighlighter.Formats["string"])
             elif i > -1:
                 self.setCurrentBlockState(state)
                 self.setFormat(i, text.length(),
-                               PythonHighlighter.Formats["string"])
+                               AssemblyHighlighter.Formats["string"])
 
 
     def rehighlight(self):
@@ -240,10 +184,11 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         font = QFont("Courier", 11)
+        self.toolbar = QToolBar()
         font.setFixedPitch(True)
         self.editor = TextEdit()
         self.editor.setFont(font)
-        self.highlighter = PythonHighlighter(self.editor.document())
+        self.highlighter = AssemblyHighlighter(self.editor.document())
         self.setCentralWidget(self.editor)
 
         status = self.statusBar()
@@ -251,10 +196,10 @@ class MainWindow(QMainWindow):
         status.showMessage("Ready", 5000)
 
         fileNewAction = self.createAction("&New...", self.fileNew,
-                QKeySequence.New, "filenew", "Create a Python file")
+                QKeySequence.New, "filenew", "Create a Assembly file")
         fileOpenAction = self.createAction("&Open...", self.fileOpen,
                 QKeySequence.Open, "fileopen",
-                "Open an existing Python file")
+                "Open an existing Assembly file")
         self.fileSaveAction = self.createAction("&Save", self.fileSave,
                 QKeySequence.Save, "filesave", "Save the file")
         self.fileSaveAsAction = self.createAction("Save &As...",
@@ -290,11 +235,15 @@ class MainWindow(QMainWindow):
         fileToolbar.setObjectName("FileToolBar")
         self.addActions(fileToolbar, (fileNewAction, fileOpenAction,
                                       self.fileSaveAction))
-        editToolbar = self.addToolBar("Edit")
-        editToolbar.setObjectName("EditToolBar")
-        self.addActions(editToolbar, (self.editCopyAction,
+
+        #editToolbar = self.addToolBar("Edit")
+        editToolbar = self.addToolBar(Qt.LeftToolBarArea,self.toolbar)
+        #editToolbar.setObjectName("EditToolBar")
+        self.toolbar.addActions( (self.editCopyAction,
                 self.editCutAction, self.editPasteAction, None,
                 self.editIndentAction, self.editUnindentAction))
+        #editToolbar = self.addToolBar(Qt.LeftToolBarArea,QToolBar())
+
 
 
         self.editor.selectionChanged.connect(self.updateUi)
@@ -326,7 +275,7 @@ class MainWindow(QMainWindow):
                      tip=None, checkable=False, signal="triggered()"):
         action = QAction(text, self)
         if icon is not None:
-            action.setIcon(QIcon(":/{0}.png".format(icon)))
+            action.setIcon(QIcon("{0}.ico".format(icon)))
         if shortcut is not None:
             action.setShortcut(shortcut)
         if tip is not None:
@@ -355,7 +304,7 @@ class MainWindow(QMainWindow):
     def okToContinue(self):
         if self.editor.document().isModified():
             reply = QMessageBox.question(self,
-                            "Python Editor - Unsaved Changes",
+                            "PRV332 ide - Unsaved Changes",
                             "Save unsaved changes?",
                             QMessageBox.Yes|QMessageBox.No|
                             QMessageBox.Cancel)
@@ -383,8 +332,8 @@ class MainWindow(QMainWindow):
         dir = (os.path.dirname(self.filename)
                if self.filename is not None else ".")
         fname = str(QFileDialog.getOpenFileName(self,
-                "Python Editor - Choose File", dir,
-                "Python files (*.py *.pyw)")[0])
+                "PRV332 ide - Choose File", dir,
+                "Assembly language sourse file (*.asm)")[0])
         if fname:
             self.filename = fname
             self.loadFile()
@@ -401,12 +350,12 @@ class MainWindow(QMainWindow):
             self.editor.setPlainText(stream.readAll())
             self.editor.document().setModified(False)
         except EnvironmentError as e:
-            QMessageBox.warning(self, "Python Editor -- Load Error",
+            QMessageBox.warning(self, "PRV332 ide -- Load Error",
                     "Failed to load {0}: {1}".format(self.filename, e))
         finally:
             if fh is not None:
                 fh.close()
-        self.setWindowTitle("Python Editor - {0}".format(
+        self.setWindowTitle("PRV332 ide - {0}".format(
                 QFileInfo(self.filename).fileName()))
 
 
@@ -423,7 +372,7 @@ class MainWindow(QMainWindow):
             stream << self.editor.toPlainText()
             self.editor.document().setModified(False)
         except EnvironmentError as e:
-            QMessageBox.warning(self, "Python Editor -- Save Error",
+            QMessageBox.warning(self, "PRV332 ide -- Save Error",
                     "Failed to save {0}: {1}".format(self.filename, e))
             return False
         finally:
@@ -435,11 +384,11 @@ class MainWindow(QMainWindow):
     def fileSaveAs(self):
         filename = self.filename if self.filename is not None else "."
         filename,filetype = QFileDialog.getSaveFileName(self,
-                "Python Editor -- Save File As", filename,
-                "Python files (*.py *.pyw)")
+                "PRV332 ide -- Save File As", filename,
+                "Assembly language sourse file (*.asm)")
         if filename:
             self.filename = filename
-            self.setWindowTitle("Python Editor - {0}".format(
+            self.setWindowTitle("PRV332 ide - {0}".format(
                     QFileInfo(self.filename).fileName()))
             return self.fileSave()
         return False
@@ -508,7 +457,7 @@ class MainWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(":/icon.png"))
+    app.setWindowIcon(QIcon("p1.ico"))
     fname = None
     if len(sys.argv) > 1:
         fname = sys.argv[1]
